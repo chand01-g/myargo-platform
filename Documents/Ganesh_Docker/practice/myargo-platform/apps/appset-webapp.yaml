@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: webapp-environments
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+          - env: stage
+          - env: prod
+
+  template:
+    metadata:
+      name: webapp-{{env}}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/chand01-g/myargo-platform.git
+        targetRevision: main
+        path: services/webapp
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: web-{{env}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+
