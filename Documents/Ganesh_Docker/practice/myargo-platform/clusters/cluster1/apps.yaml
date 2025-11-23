@@ -1,19 +1,33 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
-  name: cluster1-root
+  name: webapp-helm-envs
   namespace: argocd
 spec:
-  project: default
-  source:
-    repoURL: https://github.com/chand01-g/myargo-platform.git
-    targetRevision: HEAD
-    path: apps
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: argocd
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+  generators:
+    - list:
+        elements:
+          - env: dev
+          - env: stage
+          - env: prod
+
+  template:
+    metadata:
+      name: webapp-helm-{{env}}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/chand01-g/myargo-platform.git
+        targetRevision: main
+        path: charts/webapp
+        helm:
+          valueFiles:
+            - values-{{env}}.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: webapp-{{env}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
 
